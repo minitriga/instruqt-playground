@@ -1,0 +1,90 @@
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret admin
+!
+ip routing
+!
+management api http-commands
+   no shutdown
+!
+no service interface inactive port-id allocation disabled
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname {{ data.DcimDevice.edges[0].node.name.value }}
+!
+spanning-tree mode mstp
+!
+system l1
+   unsupported speed action error
+   unsupported error-correction action error
+!
+{%   for vlan in data.DcimDevice.edges[0].node.location.node.vlans.edges %}
+vlan {{ vlan.node.vlan_id.value }}
+   name {{ vlan.node.name.value }}
+!
+{%   endfor %}
+management api gnmi
+   transport grpc default
+!
+management api netconf
+   transport ssh default
+!
+{%   for intf in data.DcimDevice.edges[0].node.interfaces.edges %}
+interface {{ intf.node.name.value }}
+{%      if intf.node.description.value %}
+   description "{{ intf.node.description.value }}"
+{%      endif %}
+{%      if not intf.node.enabled.value %}
+   shutdown
+{%      endif %}
+{%      if intf.node.mtu.value %}
+   mtu {{ intf.node.mtu.value }}
+{%      endif %}
+{%      if intf.node.ip_addresses %}
+{%         for ip in intf.node.ip_addresses.edges %}
+   no switchport
+   ip address {{ ip.node.address.value  }}
+{%            if intf.node.role.value == "peer" or intf.node.role.value == "backbone" %}
+   ip ospf area 0.0.0.0
+{%            endif %}
+{%         endfor %}
+{%      else %}
+{%         if intf.node.l2_mode %}
+{%             if intf.node.l2_mode.value == "Access" %}
+   switchport access vlan {{ intf.node.untagged_vlan.node.vlan_id.value }}
+{%             elif intf.node.l2_mode.value == "Trunk" %}
+   switchport mode trunk
+{%             endif %}
+{%             if intf.node.tagged_vlan.edges %}
+   switchport trunk native vlan {{ intf.node.untagged_vlan.node.vlan_id.value }}
+{%             endif %}
+{%             if intf.node.tagged_vlan.edges %}
+   switchport trunk allowed vlan {% for tagged_vlan in intf.node.tagged_vlan.edges %} {{ tagged_vlan.node.vlan_id.value }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{%             endif %}
+{%         endif %}
+{%      endif %}
+!
+{%   endfor %}
+{%   for vlan in data.DcimDevice.edges[0].node.location.node.vlans.edges %}
+interface Vlan{{ vlan.node.vlan_id.value }}
+   description SVI for VLAN {{ vlan.node.vlan_id.value }}
+{%       for prefix in vlan.node.prefixes.edges %}
+   ip address {{ prefix.node.gateway.node.address.value }} 
+   ip ospf area 0.0.0.0
+{%       endfor %}
+!
+{%   endfor %}
+interface Management0
+   ip address {{ data.DcimDevice.edges[0].node.primary_address.node.address.value }}
+!
+ip route 0.0.0.0/0 {{ data.DcimDevice.edges[0].node.primary_address.node.ip_prefix.node.gateway.node.address.ip }}
+!
+router ospf 1
+   router-id {{ data.DcimDevice.edges[0].node.primary_address.node.address.ip }}
+!
+end
