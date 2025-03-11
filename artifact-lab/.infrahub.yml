@@ -1,0 +1,16 @@
+---
+queries:
+  - name: device_info
+    file_path: "templates/device_info.gql"
+  - name: tmp
+    file_path: "templates/tmp.gql"
+
+jinja2_transforms:
+  - name: "device_eos"
+    description: "Arista EOS Template"
+    query: "device_info"
+    template_path: templates/device_arista_eos_config.tpl.j2
+  - name: "tmp"
+    description: "Arista EOS Template"
+    query: "tmp"
+    template_path: templates/config.tpl.j2
