@@ -1,0 +1,135 @@
+query device_info($device: String!) {
+  DcimDevice(name__value: $device) {
+    edges {
+      node {
+        id
+        name {
+          value
+        }
+        interfaces {
+          edges {
+            node {
+              mtu {
+                value
+              }
+              name {
+                value
+              }
+              enabled {
+                value
+              }
+              description {
+                value
+              }
+              ... on DcimInterfaceL2 {
+                id
+                role {
+                  value
+                }
+                untagged_vlan {
+                  node {
+                    vlan_id {
+                      value
+                    }
+                    name {
+                      value
+                    }
+                  }
+                }
+                l2_mode {
+                  value
+                }
+                tagged_vlan {
+                  edges {
+                    node {
+                      vlan_id {
+                        value
+                      }
+                      name {
+                        value
+                      }
+                    }
+                  }
+                }
+              }
+              ... on DcimInterfaceL3 {
+                id
+                name {
+                  id
+                }
+                role {
+                  value
+                }
+                ip_addresses {
+                  edges {
+                    node {
+                      address {
+                        value
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        location {
+          node {
+            display_label
+            vlans {
+              edges {
+                node {
+                  vlan_id {
+                    value
+                  }
+                  role {
+                    value
+                  }
+                  name {
+                    value
+                  }
+                  prefixes {
+                    edges {
+                      node {
+                        gateway {
+                          node {
+                            address {
+                              value
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        primary_address {
+          node {
+            address {
+              value
+              ip
+            }
+            ip_prefix {
+              node {
+                ... on IpamPrefix {
+                  id
+                  gateway {
+                    node {
+                      address {
+                        value
+                        ip
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
